@@ -7,3 +7,8 @@ TODOs:
 - Implement in C to test language traffic differences
 - Use UDP datagram connections on top of streams
 - Test traceroute & iperf and how to potentially integarate them
+- What should the payload be?
+    - something meaningful?
+    - Self-defined header
+    - timestamp...
+- p2p network
