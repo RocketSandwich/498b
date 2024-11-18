@@ -53,7 +53,7 @@ def start_client(server_address, server_port, msg_interval, log_file):
 
 if __name__ == "__main__":
     # Generate default log file with current date and time
-    default_logfile = f"latency_log_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.txt"
+    default_logfile = f"latency_log_{datetime.now().strftime('%m-%d-%Y_%H:%M:%S')}.txt"
     
     parser = argparse.ArgumentParser(description="TCP Traffic Generator Client")
     parser.add_argument("-a", "--address", type=str, required=True, help="Server IP address")
