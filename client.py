@@ -2,8 +2,53 @@ import socket
 import time
 import argparse
 from datetime import datetime
+import mysql.connector
+from mysql.connector import errorcode
 
-def start_client(server_address, server_port, msg_interval, log_file):
+# Obtain connection string information from the portal
+config = {
+  'host':'server-client-logs.mysql.database.azure.com',
+  'user':'admin498',
+  'password':'m!ntch0c0l@te',
+  'database':'server-client-logs'
+}
+
+# Construct connection string
+try:
+   conn = mysql.connector.connect(**config)
+   print("Connection established")
+except mysql.connector.Error as err:
+  if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+    print("Something is wrong with the user name or password")
+  elif err.errno == errorcode.ER_BAD_DB_ERROR:
+    print("Database does not exist")
+  else:
+    print(err)
+else:
+  cursor = conn.cursor()
+
+def start_client(server_address, server_port, msg_interval, log_file, client_region, server_region):
+    # Get the current date and time in YYYY_MM_DD_HH_MM_SS
+    current_date = datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
+
+    # Construct the table name
+    table_name = f"connection_logs_{current_date}"
+
+    # Create table query with table name
+    create_table_query = f"""
+    CREATE TABLE {table_name} (
+        index_id INT AUTO_INCREMENT PRIMARY KEY, 
+        start_time FLOAT, 
+        end_time FLOAT, 
+        client_region VARCHAR(100), 
+        server_region VARCHAR(100), 
+        latency INTEGER
+    );
+    """
+
+    # Execute the query, creates the table
+    cursor.execute(create_table_query)
+
     while True:
         try:
             client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -34,6 +79,14 @@ def start_client(server_address, server_port, msg_interval, log_file):
                         print(f"Round-trip latency: {latency:.2f} ms")
                         file.write(f"{latency:.2f}\n")
                         file.flush()  # Ensure the data is written to the file immediately
+
+                        # Insert the record into the database
+                        insert_query = f"""
+                        INSERT INTO {table_name} (start_time, end_time, client_region, server_region, latency)
+                        VALUES (%s, %s, %s, %s, %s);
+                        """
+                        cursor.execute(insert_query, (start_time, end_time, client_region, server_region, latency))
+                        conn.commit()
                         
                         time.sleep(msg_interval)
                     except (BrokenPipeError, ConnectionResetError):
@@ -50,6 +103,8 @@ def start_client(server_address, server_port, msg_interval, log_file):
             break
         finally:
             client_socket.close()
+            cursor.close()
+            conn.close()
 
 if __name__ == "__main__":
     # Generate default log file with current date and time
@@ -60,6 +115,9 @@ if __name__ == "__main__":
     parser.add_argument("-p", "--port", type=int, required=True, default=12345, help="Server port number")
     parser.add_argument("-i", "--interval", type=int, default=5, help="Interval (in seconds) between each message")
     parser.add_argument("-l", "--logfile", type=str, default=default_logfile, help="File to log latency values")
-    args = parser.parse_args()
+    parser.add_argument("-cr", "--clientregion", type=str, required=True, help="Client region")
+    parser.add_argument("-sr", "--serverregion", type=str, required=True, help="Server region")
+    args = parser.parse_args() 
     
-    start_client(args.address, args.port, args.interval, args.logfile)
+    start_client(args.address, args.port, args.interval, args.logfile, \
+                 args.clientregion, args.serverregion)
