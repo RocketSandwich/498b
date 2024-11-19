@@ -28,8 +28,8 @@ else:
   cursor = conn.cursor()
 
 def start_client(server_address, server_port, msg_interval, log_file, client_region, server_region):
-    # Get the current date in YYYY_MM_DD
-    current_date = datetime.now().strftime('%Y_%m_%d')
+    # Get the current date and time in YYYY_MM_DD_HH_MM_SS
+    current_date = datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
 
     # Construct the table name
     table_name = f"connection_logs_{current_date}"
@@ -37,8 +37,9 @@ def start_client(server_address, server_port, msg_interval, log_file, client_reg
     # Create table query with table name
     create_table_query = f"""
     CREATE TABLE {table_name} (
-        start_time DATETIME PRIMARY KEY, 
-        end_time DATETIME, 
+        index_id INT AUTO_INCREMENT PRIMARY KEY, 
+        start_time FLOAT, 
+        end_time FLOAT, 
         client_region VARCHAR(100), 
         server_region VARCHAR(100), 
         latency INTEGER
@@ -114,7 +115,9 @@ if __name__ == "__main__":
     parser.add_argument("-p", "--port", type=int, required=True, default=12345, help="Server port number")
     parser.add_argument("-i", "--interval", type=int, default=5, help="Interval (in seconds) between each message")
     parser.add_argument("-l", "--logfile", type=str, default=default_logfile, help="File to log latency values")
-    args = parser.parse_args()
+    parser.add_argument("-cr", "--clientregion", type=str, required=True, help="Client region")
+    parser.add_argument("-sr", "--serverregion", type=str, required=True, help="Server region")
+    args = parser.parse_args() 
     
     start_client(args.address, args.port, args.interval, args.logfile, \
-                 args.client_region, args.server_region)
+                 args.clientregion, args.serverregion)

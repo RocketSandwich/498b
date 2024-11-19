@@ -1,0 +1,2 @@
+# ignore logs
+latency_log*.txt
