@@ -1,0 +1,21 @@
+{
+  "name": "azure-dashboard",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "\"npm run server\" \"npm run client\"",
+    "server": "node server.js",
+    "client": "npm start --prefix client"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "axios": "^1.7.7",
+    "cors": "^2.8.5",
+    "express": "^4.21.1",
+    "mssql": "^11.0.1",
+    "mysql2": "^3.11.4"
+  }
+}
